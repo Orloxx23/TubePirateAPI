@@ -56,7 +56,7 @@ router.get("/download", async (req, res) => {
     fs.renameSync(mergedFilePath, newFilePath);
 
     // Generate the download link
-    const downloadUrl = `/download/${encodeURIComponent(newFilePath)}`;
+    const downloadUrl = `/api/download/${encodeURIComponent(mergedFilePath)}`;
 
     // Clean up temporary files
     fs.unlinkSync("audio.aac");
@@ -75,6 +75,28 @@ router.get("/download", async (req, res) => {
       .json({ error: "An error occurred while processing the video." });
   }
 });
+
+router.get("/download/:filename", (req, res) => {
+    try {
+      const filename = decodeURIComponent(req.params.filename);
+      const filePath = `videos/${filename}`;
+  
+      if (fs.existsSync(filePath)) {
+        res.download(filePath, (err) => {
+          if (err) {
+            console.error("Error while downloading:", err);
+            res.status(500).json({ error: "An error occurred while downloading the file." });
+          }
+        });
+      } else {
+        res.status(404).json({ error: "File not found." });
+      }
+    } catch (error) {
+      console.error("Error while processing download request:", error);
+      res.status(500).json({ error: "An error occurred while processing the download request." });
+    }
+  });
+  
 
 // Export the router
 module.exports = router;
